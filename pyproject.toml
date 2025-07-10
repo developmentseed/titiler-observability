@@ -1,0 +1,19 @@
+[project]
+name = "titiler-observability"
+version = "0.1.0"
+description = "A demo application for showing how to use OpenTelemetry to power an observability platform for TiTiler"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "gunicorn>=23.0.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.34.1",
+    "titiler-application",
+    "titiler-core[telemetry]",
+    "titiler-extensions[cogeo,stac]",
+    "uvicorn>=0.35.0",
+]
+
+[tool.uv.sources]
+titiler-application = { git = "https://github.com/developmentseed/titiler", subdirectory = "src/titiler/application", rev = "main" }
+titiler-core = { git = "https://github.com/developmentseed/titiler", subdirectory = "src/titiler/core", rev = "main" }
+titiler-extensions = { git = "https://github.com/developmentseed/titiler", subdirectory = "src/titiler/extensions", rev = "main" }
