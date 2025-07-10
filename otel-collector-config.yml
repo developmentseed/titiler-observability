@@ -29,6 +29,13 @@ processors:
         from_context: span_id
         action: upsert
 
+  transform:
+    log_statements:
+      - context: log
+        statements:
+          - set(body, ParseJSON(body)) where IsString(body)
+          - set(attributes["message"], body["message"]) where IsMap(body)
+
 exporters:
   otlp/jaeger:
     endpoint: jaeger:4317

@@ -241,54 +241,27 @@ log_config.dictConfig(
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
-            "detailed": {
-                "format": "%(asctime)s - %(levelname)s - %(name)s - trace_id=%(otelTraceID)s span_id=%(otelSpanID)s - %(message)s"
-            },
-            "request": {
-                "format": (
-                    "%(asctime)s - %(levelname)s - %(name)s - trace_id=%(otelTraceID)s span_id=%(otelSpanID)s - %(message)s "
-                    + json.dumps(
-                        {
-                            k: f"%({k})s"
-                            for k in [
-                                "http.method",
-                                "http.referer",
-                                "http.request.header.origin",
-                                "http.target",
-                                "http.request.header.content-length",
-                                "http.request.header.accept-encoding",
-                                "http.request.header.origin",
-                                "titiler.path_params",
-                                "titiler.query_params",
-                            ]
-                        }
-                    )
-                ),
+            "simple": {
+                "format": "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
             },
         },
         "handlers": {
-            "console_detailed": {
+            "console": {
                 "class": "logging.StreamHandler",
-                "level": "WARNING",
-                "formatter": "detailed",
-                "stream": "ext://sys.stdout",
-            },
-            "console_request": {
-                "class": "logging.StreamHandler",
-                "level": "DEBUG",
-                "formatter": "request",
+                "level": "INFO",
+                "formatter": "simple",
                 "stream": "ext://sys.stdout",
             },
         },
         "loggers": {
             "titiler": {
                 "level": "INFO",
-                "handlers": ["console_detailed"],
+                "handlers": ["console"],
                 "propagate": True,
             },
             "titiler.requests": {
                 "level": "INFO",
-                "handlers": ["console_request"],
+                "handlers": ["console"],
                 "propagate": True,
             },
         },
