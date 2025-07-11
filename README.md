@@ -72,7 +72,7 @@ The stack consists of six containerized services orchestrated on a single Docker
 ## Usage
 
 ```bash
-docker-compose up -d
+docker compose up
 ```
 
 Access services:
