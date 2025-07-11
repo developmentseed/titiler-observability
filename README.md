@@ -1,6 +1,7 @@
 # TiTiler OpenTelemetry Observability Stack
 
 A complete observability stack for TiTiler applications using OpenTelemetry, demonstrating distributed tracing, metrics collection, and structured logging with Grafana visualization.
+The goal is to demonstrate how OpenTelemetry can be used to provide correlated traces and logs and how those can be pulled into an observability platform like Grafana.
 
 ## Architecture
 
@@ -9,6 +10,7 @@ The stack consists of six containerized services orchestrated on a single Docker
 ### Core Services
 
 **titiler** (`main.py:139`)
+
 - FastAPI application with OpenTelemetry instrumentation
 - Exports traces, metrics, and logs to OpenTelemetry Collector via OTLP/gRPC
 - Custom metrics middleware tracks tile requests, HTTP requests, and response times
@@ -16,32 +18,37 @@ The stack consists of six containerized services orchestrated on a single Docker
 - Exposed on port 8000
 
 **otel-collector** (`otel-collector-config.yml`)
+
 - OpenTelemetry Collector with contrib distribution
 - Receives telemetry data via OTLP protocol (ports 4317/4318)
 - Processes and routes data to appropriate backends:
   - Traces ’ Jaeger
-  - Metrics ’ Prometheus 
+  - Metrics ’ Prometheus
   - Logs ’ Loki
 - Applies resource attributes and batching for performance
 
 ### Observability Backends
 
 **prometheus** (`prometheus.yml`)
+
 - Time-series database for metrics storage
 - Receives metrics from OpenTelemetry Collector via remote write API
 - Exposed on port 9090
 
 **jaeger** (`jaeger:latest`)
-- Distributed tracing backend with OTLP ingestion enabled
+
+- Distributed tracing backend with OpenTelemetry Logging Protocol (OTLP) ingestion enabled
 - Receives traces from OpenTelemetry Collector
 - Web UI exposed on port 16686
 
 **loki** (`loki-config.yaml`)
+
 - Log aggregation system for structured log storage
 - Receives logs from OpenTelemetry Collector via push API
 - Exposed on port 3100
 
 **grafana** (`grafana-*.yml`)
+
 - Visualization platform with pre-configured datasources
 - Unified dashboard for metrics, traces, and logs correlation
 - Default credentials: admin/admin
@@ -69,7 +76,9 @@ docker-compose up -d
 ```
 
 Access services:
-- TiTiler API: http://localhost:8000
-- Grafana: http://localhost:3000
-- Prometheus: http://localhost:9090
-- Jaeger: http://localhost:16686
+
+- TiTiler API: <http://localhost:8000>
+- Grafana: <http://localhost:3000>
+- Prometheus: <http://localhost:9090>
+- Jaeger: <http://localhost:16686>
+
