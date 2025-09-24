@@ -1,0 +1,109 @@
+services:
+  titiler:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    command: ["uv", "run", "gunicorn", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000", "--workers", "1"]
+    environment:
+      # GDAL config
+      - CPL_TMPDIR=/tmp
+      - GDAL_CACHEMAX=75%
+      - GDAL_INGESTED_BYTES_AT_OPEN=32768
+      - GDAL_DISABLE_READDIR_ON_OPEN=EMPTY_DIR
+      - GDAL_HTTP_MERGE_CONSECUTIVE_RANGES=YES
+      - GDAL_HTTP_MULTIPLEX=YES
+      - GDAL_HTTP_VERSION=2
+      - PYTHONWARNINGS=ignore
+      - VSI_CACHE=TRUE
+      - VSI_CACHE_SIZE=536870912
+      - TITILER_API_DEBUG=TRUE
+      - TITILER_API_TELEMETRY_ENABLED=True
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      - otel-collector
+    develop:
+      watch:
+        - action: sync+restart
+          path: main.py
+          target: /app/main.py
+
+        - action: rebuild
+          path: ./pyproject.toml
+    networks:
+      - observability-net
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest 
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml 
+    ports:
+      - "4317:4317" 
+      - "4318:4318" 
+      - "8888:8888" 
+    depends_on:
+      - prometheus 
+      - jaeger 
+    networks:
+      - observability-net 
+    develop:
+      watch:
+        - action: sync+restart
+          path: otel-collector-config.yml
+          target: /etc/otel-collector-config.yml
+
+  prometheus:
+    image: prom/prometheus:latest 
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver 
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml 
+    ports:
+      - "9090:9090" 
+    networks:
+      - observability-net 
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest 
+    ports:
+      - "16686:16686" 
+      - "14268:14268" 
+      - "14250:14250" 
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - observability-net 
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100" 
+    command: -config.file=/etc/loki/local-config.yaml 
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml 
+    networks:
+      - observability-net 
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000" 
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin 
+      - GF_SECURITY_ADMIN_PASSWORD=admin 
+    volumes:
+      - ./grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./grafana-dashboard.json:/etc/grafana/provisioning/dashboards/grafana-dashboard.json
+    depends_on:
+      - prometheus 
+      - jaeger 
+      - loki
+    networks:
+      - observability-net 
+
+networks:
+  observability-net:
+    driver: bridge
